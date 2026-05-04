@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Latent World Model — Internal Demo Report</title>
+<style>
+  :root {
+    --bg: #0e1424;
+    --bg-grad: linear-gradient(135deg, #0e1424 0%, #1a1430 60%, #2a1830 100%);
+    --panel: #141a2c;
+    --panel-border: #232b44;
+    --text: #e6ecf5;
+    --muted: #93a0b8;
+    --accent: #7dd3fc;
+    --green: #4ade80;
+    --amber: #fbbf24;
+  }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    background-image: var(--bg-grad);
+    background-attachment: fixed;
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    line-height: 1.6;
+  }
+  .wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 56px 40px 96px;
+  }
+  h1 {
+    font-size: 2.4rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin: 0 0 8px;
+  }
+  h2 {
+    font-size: 1.55rem;
+    margin: 56px 0 12px;
+    border-bottom: 1px solid var(--panel-border);
+    padding-bottom: 8px;
+  }
+  h3 {
+    font-size: 1.15rem;
+    margin: 28px 0 8px;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  p, li { color: var(--text); }
+  .subtitle {
+    color: var(--muted);
+    font-size: 1.05rem;
+    margin: 0 0 8px;
+  }
+  .meta {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin-bottom: 32px;
+  }
+  .lede {
+    font-size: 1.08rem;
+    color: var(--text);
+    background: var(--panel);
+    border-left: 3px solid var(--accent);
+    padding: 18px 22px;
+    border-radius: 6px;
+    margin: 24px 0 8px;
+  }
+  .demo-block {
+    margin: 28px 0 40px;
+    padding: 22px;
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 10px;
+  }
+  .demo-block.headline { border-left: 3px solid var(--green); }
+  .demo-block .vid-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 26px;
+    align-items: start;
+  }
+  .demo-block video {
+    width: 100%;
+    border-radius: 6px;
+    background: #000;
+    border: 1px solid var(--panel-border);
+    display: block;
+  }
+  .vcaption {
+    color: var(--muted);
+    font-size: 0.85rem;
+    margin-top: 8px;
+    text-align: center;
+  }
+  ul { padding-left: 22px; }
+  li { margin-bottom: 6px; }
+  ol { padding-left: 22px; }
+  ol li { margin-bottom: 6px; }
+  code, .mono {
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    background: rgba(125, 211, 252, 0.08);
+    color: #cfe7fa;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 0.92em;
+  }
+  .pill {
+    display: inline-block;
+    font-size: 0.75rem;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: rgba(125, 211, 252, 0.12);
+    color: var(--accent);
+    border: 1px solid rgba(125, 211, 252, 0.25);
+    margin-right: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .pill.green { background: rgba(74, 222, 128, 0.12); color: var(--green); border-color: rgba(74, 222, 128, 0.25); }
+  .quote {
+    border-left: 2px solid var(--panel-border);
+    padding: 4px 16px;
+    margin: 12px 0;
+    color: var(--muted);
+    font-style: italic;
+  }
+  .grid-claims {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 12px 0;
+  }
+  .claim, .nonclaim {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 8px;
+    padding: 14px 18px;
+  }
+  .claim { border-left: 3px solid var(--green); }
+  .nonclaim { border-left: 3px solid var(--amber); }
+  .claim h4, .nonclaim h4 { margin: 0 0 6px; font-size: 0.95rem; }
+  .claim h4 { color: var(--green); }
+  .nonclaim h4 { color: var(--amber); }
+  .method {
+    background: rgba(125, 211, 252, 0.05);
+    border: 1px solid rgba(125, 211, 252, 0.18);
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin: 10px 0;
+  }
+  .method strong { color: var(--accent); }
+  hr { border: none; border-top: 1px solid var(--panel-border); margin: 48px 0 8px; }
+  @media (max-width: 900px) {
+    .demo-block .vid-row { grid-template-columns: 1fr; }
+    .grid-claims { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Latent World Model for GUI Agents</h1>
+<p class="subtitle">Internal demo report — direction, demo design, and conceptual videos.</p>
+<p class="meta">2026-05-04</p>
+
+<div class="lede">
+  We are training a task-conditioned JEPA encoder + latent next-step predictor on
+  Ubuntu GUI trajectories. This report combines the project context, the demo we
+  are building to communicate it, and two conceptual videos that anchor the
+  story: one explains <em>how the imagined frames and their attribution heatmaps
+  are produced</em>, the other shows <em>why the world model is useful</em>.
+</div>
+
+<h2>1. Project description</h2>
+<p>
+  We use a JEPA-based method to train a state encoder for GUI-related tasks.
+  Given the rich information present in raw screenshots, our encoder is
+  conditioned on the task. The goal is to learn representations that capture
+  only the features relevant to completing that task, rather than encoding all
+  visual details indiscriminately.
+</p>
+<p>
+  To achieve this in a self-supervised manner, we mask a large portion of video
+  frames and train the model to predict the missing content in latent space,
+  conditioned on the unmasked regions. The target latent representations are
+  themselves generated from the partially observed (unmasked) inputs, ensuring
+  consistency in the learning signal.
+</p>
+<p>
+  Through this JEPA-style training process, the model is encouraged to focus on
+  features that most strongly influence the trajectory of the task. In practice,
+  this leads to representations that emphasize task-relevant structure while
+  ignoring irrelevant visual noise. On top of this encoder we train a
+  next-step latent predictor, yielding a latent-space world model capable of
+  modeling task dynamics.
+</p>
+
+<h2>2. What the demo needs to show</h2>
+<p>
+  A progress-bar demo conditioned on state and task is unconvincing — our
+  rollouts are not precise enough to support accurate progress estimation, and
+  even if they were, a numeric gauge invites questions about calibration that
+  do not serve the marketing goal. The real strength of our approach is in two
+  capabilities, both of which the demo must make visceral:
+</p>
+<ul>
+  <li>
+    <strong>Directional guidance.</strong> The model gives agents a sense of
+    <em>where to go</em>, not just how far along they are.
+  </li>
+  <li>
+    <strong>Outcome-based evaluation via rollouts.</strong> By simulating
+    candidate trajectories in latent space, we can compare different possible
+    end-states and measure how close each lands to a desired goal state. The
+    agent picks the action sequence whose imagined endpoint is closest to the
+    goal.
+  </li>
+</ul>
+<p>
+  The demo should make the agent's planning process feel tangible — like
+  watching a human mentally simulate options before committing.
+</p>
+
+<!-- ================================================================== -->
+<h2>3. Video 1 — How the imagined frames and attention heatmaps are made</h2>
+
+<div class="demo-block">
+  <div class="vid-row">
+    <div>
+      <span class="pill">Video 1</span>
+      <h3>Imagined rollout with attribution</h3>
+      <p>
+        A single 8-step rollout from a starting state <code>z_0</code>
+        (encoded from a real Desktop screenshot). Each step shows two
+        panels side-by-side: the <em>imagined frame</em> reconstructed
+        from the latent, and the <em>attention map</em> showing which
+        regions the latent actually represents. The per-step caption
+        names the controlled object — "context menu", "name field",
+        "<u>R</u> typed into the name field", "OK as the commit
+        control", "<u>folder</u> created on the Desktop".
+      </p>
+      <p class="quote">
+        White indicates attended regions; the underlined term names the
+        controlled object.
+      </p>
+      <p>
+        The dressing in the imagined frame is the decoder filling in
+        plausible context — we are not selling generative fidelity.
+        What we <em>are</em> selling is that the highlighted regions in
+        the attention map are attributable to the latent and track the
+        things the model is actually reasoning about at each step.
+      </p>
+    </div>
+    <div>
+      <video controls preload="metadata" src="videos/latent_rollout_fig3_style.mp4"></video>
+      <div class="vcaption">latent_rollout_fig3_style.mp4</div>
+    </div>
+  </div>
+</div>
+
+<h3>How the imagined frames are produced</h3>
+<ol>
+  <li>
+    <strong>Encode the start.</strong> Feed a real screenshot
+    <code>x_0</code> and the task <code>T</code> into the frozen
+    task-conditioned JEPA encoder: <code>z_0 = E(x_0 | T)</code>. The
+    encoder is ViT-style, so <code>z_0</code> is a sequence of patch
+    tokens, not a single global vector. This token-sequence form is
+    important — it is what makes per-token attribution possible later.
+  </li>
+  <li>
+    <strong>Roll forward in latent space.</strong> Apply the next-step
+    predictor step by step under a chosen action sequence:
+    <code>z_{t+1} = P(z_t, a_t)</code>. The real GUI is never touched
+    past step 0; everything past <code>x_0</code> is imagined.
+  </li>
+  <li>
+    <strong>Decode each step to pixels.</strong> A cross-attention
+    diffusion decoder <code>D(z_t, T) → x̂_t</code> reconstructs the
+    imagined screenshot at each step. The decoder cross-attends to
+    <code>z_t</code>'s patch tokens, the same way Stable Diffusion
+    cross-attends to text tokens.
+  </li>
+</ol>
+
+<h3>Why we need the attribution heatmap</h3>
+<p>
+  A diffusion decoder fills in plenty of detail that does not come from
+  the latent — it comes from the prior. If we just showed the decoded
+  image, a viewer could not tell which pixels are the latent talking and
+  which are the decoder hallucinating. The heatmap closes that gap and,
+  more importantly, <strong>scopes our claims</strong>: we point at the
+  bright region and say "this is what the latent represents," and we
+  honestly mark everything else as decoder context.
+</p>
+
+<h3>How the heatmap is computed</h3>
+<p>Three methods, used together, all enabled by the cross-attention decoder:</p>
+
+<div class="method">
+  <p><strong>(a) DAAM-style per-token attribution — primary.</strong>
+  For each latent token, aggregate its cross-attention weights across all
+  decoder layers, attention heads, and diffusion timesteps. The result is
+  a per-token spatial heatmap showing where in the image that token
+  influenced pixels. Sum over all tokens to get the overall mask
+  <code>m_t</code> shown in the video. Same lineage as
+  Prompt-to-Prompt / DAAM in image-editing literature.</p>
+</div>
+
+<div class="method">
+  <p><strong>(b) Variance-ratio map — sanity check.</strong>
+  Decode many times from <code>z_t</code> with different diffusion noise
+  to get per-pixel variance <code>V_prior</code> (what the prior fills in
+  freely). Decode from slightly perturbed <code>z_t + ε</code> with the
+  same noise schedule to get <code>V_z</code> (what changes when the
+  latent changes). The ratio <code>V_z / (V_z + V_prior)</code> is a
+  per-pixel "fraction of variance attributable to <code>z</code>,"
+  architecture-agnostic. We use it to confirm DAAM is not a
+  cross-attention artifact — the two should agree on the rough region.</p>
+</div>
+
+<div class="method">
+  <p><strong>(c) Token swap — counterfactual demonstration.</strong>
+  Encode a paired state (e.g., a frame with the dialog open and one with
+  it closed), swap the latent tokens DAAM identifies as "dialog tokens,"
+  and decode again — the dialog appears or disappears. This is a
+  <em>demonstration of control</em>, not just an attribution: we prove
+  the highlighted region is real by editing it.</p>
+</div>
+
+<h3>Design choices that make this possible</h3>
+<ul>
+  <li>
+    <strong>Cross-attention decoder over <code>z</code> tokens, not a
+    global vector.</strong> Without this, methods (a) and (c) are not
+    available. AdaLN/FiLM-style global conditioning would still work
+    with method (b) only, which is much weaker as evidence.
+  </li>
+  <li>
+    <strong>Classifier-free-guidance dropout on <code>z</code> during
+    decoder training.</strong> Roughly 10% of training samples drop
+    <code>z</code> and replace with a null token sequence. Costs nothing
+    to add and gives us a fast "conditional vs unconditional" attribution
+    signal at inference if we want it.
+  </li>
+  <li>
+    <strong>Train the decoder on rolled-out predicted latents too, not
+    just encoder outputs.</strong> The decoder is trained with pairs
+    <code>(x, E(x|T))</code> from the demo bank, augmented with
+    short-rollout latents <code>P(P(...P(z_0, a_0)...))</code> paired
+    with their corresponding actual frames. Without this augmentation,
+    decoded rollouts degrade exactly at the steps we care about because
+    predicted latents drift off the encoder's manifold.
+  </li>
+  <li>
+    <strong>Honest blur.</strong> JEPA latents are trained to discard
+    pixel detail, so reconstructions are blurry on textures and sharp-ish
+    on UI structure (dialog vs no-dialog, menu vs no-menu, cursor
+    presence). This asymmetry is itself evidence that the latent has
+    compressed away what does not matter and kept what does. We narrate
+    it as a feature.
+  </li>
+</ul>
+
+<!-- ================================================================== -->
+<h2>4. Video 2 — Why the world model is useful</h2>
+
+<div class="demo-block headline">
+  <div class="vid-row">
+    <div>
+      <span class="pill green">Video 2 — headline</span>
+      <h3>Goal-conditioned rollout selection</h3>
+      <p>
+        From the same starting state <code>z_0</code>, the model rolls
+        out three candidate action sequences in latent space:
+      </p>
+      <ul>
+        <li><strong>A — goal plan.</strong> right-click → New Folder → type "Reports" → Enter.</li>
+        <li><strong>B — distractor.</strong> open the <code>Home</code> folder; file manager opens.</li>
+        <li><strong>C — wrong commit.</strong> open the dialog and click Cancel.</li>
+      </ul>
+      <p>
+        The endpoint of each rollout is compared to the goal latent
+        <code>z_goal</code> (encoded from the goal screenshot, shown as
+        a reference card on the right). The closest endpoint wins:
+      </p>
+      <p>
+        <span class="mono">Rollout A → 0.94</span> &middot;
+        <span class="mono">Rollout B → 0.38</span> &middot;
+        <span class="mono">Rollout C → 0.21</span>
+      </p>
+      <p>
+        Rollout A is outlined in green and selected as the plan to
+        execute.
+      </p>
+    </div>
+    <div>
+      <video controls preload="metadata" src="videos/latent_rollout_goal_selection.mp4"></video>
+      <div class="vcaption">latent_rollout_goal_selection.mp4</div>
+    </div>
+  </div>
+</div>
+
+<h3>Why this matters for CUA-style agents</h3>
+<p>
+  This is the planning operation that a CUA-style agent gets for free
+  from a latent world model. Without it, an agent has to commit to an
+  action and find out what happens; with it, the agent imagines a
+  handful of plans, scores their imagined endpoints against a goal
+  state, and only then commits — the same pattern a human uses when
+  mentally simulating options.
+</p>
+<ul>
+  <li>
+    <strong>Think before acting.</strong> Several candidate plans are
+    rolled out in latent space, never touching the real GUI. Latent
+    rollouts are cheap: no rendering, no GUI events, no waiting for
+    pages to load.
+  </li>
+  <li>
+    <strong>Compare on outcomes, not heuristics.</strong> The agent does
+    not need a reward model or a hand-tuned scoring function — it has a
+    goal state, and it asks "which imagined endpoint is closest to that
+    goal?" Direct, model-internal, and task-grounded.
+  </li>
+  <li>
+    <strong>Reject obviously wrong branches.</strong> The distractor
+    (file manager) and the wrong-commit (dialog cancelled) rollouts
+    score low and are filtered out before any real action is taken.
+    This is exactly the kind of mistake a reactive CUA agent makes
+    repeatedly today.
+  </li>
+  <li>
+    <strong>Recover from off-track states.</strong> The same operation
+    works mid-trajectory: re-encode the current screen, re-roll
+    candidates, re-rank against the goal. The agent can re-plan instead
+    of being committed to a stale plan.
+  </li>
+  <li>
+    <strong>Composes with any policy.</strong> Candidate action
+    sequences can come from a policy network's top-K, a hand-authored
+    macro library, or a search procedure — the world model is the
+    evaluator. It augments existing CUA stacks rather than replacing
+    them.
+  </li>
+</ul>
+
+<p>
+  The two videos together complete the story: <strong>Video 1</strong>
+  shows that the imagined frames are real and what the latent
+  represents inside them is auditable; <strong>Video 2</strong> shows
+  that this auditable representation is enough to drive a useful
+  planning loop.
+</p>
+
+<!-- ================================================================== -->
+<h2>5. What we are claiming, and what we are not</h2>
+<div class="grid-claims">
+  <div class="claim">
+    <h4>What we claim</h4>
+    <ul>
+      <li>The latent rollout produces specific, recognizable imagined futures.</li>
+      <li>Highlighted regions in each imagined frame are attributable to the latent (via DAAM, cross-checked by variance-ratio, demonstrably controllable via token swap).</li>
+      <li>Different action sequences produce different, semantically appropriate imagined futures.</li>
+      <li>Endpoints can be compared to a goal latent to select an action plan.</li>
+    </ul>
+  </div>
+  <div class="nonclaim">
+    <h4>What we do not claim</h4>
+    <ul>
+      <li>Pixel-level fidelity of the decoded screenshots.</li>
+      <li>That every region of the imagined frame is latent-controlled — the rest is decoder context, openly labeled.</li>
+      <li>That latent <em>distance</em> is a calibrated progress metric (we use endpoint-to-goal similarity for selection only, not for monotone progress).</li>
+      <li>That the demo currently runs against a live policy — v1 ships curated rollouts.</li>
+    </ul>
+  </div>
+</div>
+
+<h2>6. Status and open decisions</h2>
+<ul>
+  <li><strong>Conceptual videos:</strong> two produced and embedded above. Storyboard quality, not yet model output.</li>
+  <li><strong>Demo task:</strong> "Create a folder named Reports on the Desktop." Locked for v1.</li>
+  <li><strong>Decoder:</strong> not yet trained. Cross-attention architecture is the recommended commitment so DAAM and token-swap are available; CFG dropout on <code>z</code> is essentially free to add and unlocks method (b).</li>
+  <li><strong>Attribution method:</strong> DAAM as headline overlay, variance-ratio backstage, token-swap as a punchline cut.</li>
+  <li><strong>Live agent:</strong> stretch goal; v1 ships curated rollouts.</li>
+  <li><strong>Win/Mac coverage:</strong> out of scope for Phase 1; Ubuntu only.</li>
+</ul>
+
+<hr>
+<p class="meta">
+  Source materials: <code>../README.md</code>, <code>../task.md</code>,
+  <code>../draft.md</code>, <code>../multi_trajectory_prompts.md</code>,
+  <code>../concept_video/</code>.
+</p>
+
+</div>
+</body>
+</html>

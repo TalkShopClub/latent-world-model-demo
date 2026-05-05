@@ -237,21 +237,29 @@
         (encoded from a real Desktop screenshot). Each step shows two
         panels side-by-side: the <em>imagined frame</em> reconstructed
         from the latent, and the <em>attention map</em> showing which
-        regions the latent actually represents. The per-step caption
-        names the controlled object — "context menu", "name field",
-        "<u>R</u> typed into the name field", "OK as the commit
-        control", "<u>folder</u> created on the Desktop".
+        regions the latent actually represents. Below them, a
+        <strong>"<code>z_t</code> represents"</strong> annotation
+        names the semantic content carried by the latent at that step
+        — for example, "Action tokens: right-click event and context
+        menu geometry", "Dialog tokens: New Folder dialog with name
+        field focus", "Name tokens: <code>R</code> typed into the
+        name field", "Commit tokens: OK button / Enter action
+        finalizes the dialog".
       </p>
       <p class="quote">
-        White indicates attended regions; the underlined term names the
-        controlled object.
+        White indicates the regions that the latent represents; the
+        rest is from the prior.
       </p>
       <p>
         The dressing in the imagined frame is the decoder filling in
-        plausible context — we are not selling generative fidelity.
-        What we <em>are</em> selling is that the highlighted regions in
-        the attention map are attributable to the latent and track the
-        things the model is actually reasoning about at each step.
+        plausible context from its prior — we are not selling
+        generative fidelity. What we <em>are</em> selling is that the
+        highlighted regions are attributable to the latent, and that
+        we can describe in concrete terms <em>what</em> that latent is
+        actually carrying at each step. The "<code>z_t</code>
+        represents" caption is the semantic counterpart to the
+        attention map: the map shows <em>where</em> the latent attends,
+        the caption names <em>what</em> it attends to.
       </p>
     </div>
     <div>
@@ -378,10 +386,21 @@
         out three candidate action sequences in latent space:
       </p>
       <ul>
-        <li><strong>A — goal plan.</strong> right-click → New Folder → type "Reports" → Enter.</li>
+        <li><strong>A — goal-aligned.</strong> right-click → New Folder → type "Reports" → Enter.</li>
         <li><strong>B — distractor.</strong> open the <code>Home</code> folder; file manager opens.</li>
         <li><strong>C — wrong commit.</strong> open the dialog and click Cancel.</li>
       </ul>
+      <p>
+        Each column carries its own imagined frame, attention map, and
+        a <strong>"Latent text"</strong> panel describing what that
+        rollout's latent actually represents at the current step
+        (e.g., <em>"zA: endpoint contains Reports folder"</em>,
+        <em>"zB: endpoint remains inside Home"</em>, <em>"zC: endpoint
+        has no Reports folder"</em>). This makes the divergence
+        between rollouts visible at the level of latent content, not
+        just pixel layout — the rollouts are not just visually
+        different, they encode semantically different states.
+      </p>
       <p>
         The endpoint of each rollout is compared to the goal latent
         <code>z_goal</code> (encoded from the goal screenshot, shown as

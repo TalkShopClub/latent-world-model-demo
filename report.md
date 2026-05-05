@@ -67,19 +67,24 @@ watching a human mentally simulate options before committing.
 A single 8-step rollout from a starting state `z_0` (encoded from a
 real Desktop screenshot). Each step shows two panels side-by-side: the
 *imagined frame* reconstructed from the latent, and the *attention
-map* showing which regions the latent actually represents. The
-per-step caption names the controlled object — "context menu",
-"name field", "*R* typed into the name field", "OK as the commit
-control", "*folder* created on the Desktop".
+map* showing which regions the latent actually represents. Below them,
+a **"`z_t` represents"** annotation names the semantic content carried
+by the latent at that step — for example, "Action tokens: right-click
+event and context menu geometry", "Dialog tokens: New Folder dialog
+with name field focus", "Name tokens: `R` typed into the name field",
+"Commit tokens: OK button / Enter action finalizes the dialog".
 
-> White indicates attended regions; the underlined term names the
-> controlled object.
+> White indicates the regions that the latent represents; the rest is
+> from the prior.
 
 The dressing in the imagined frame is the decoder filling in plausible
-context — we are not selling generative fidelity. What we *are*
-selling is that the highlighted regions in the attention map are
-attributable to the latent and track the things the model is actually
-reasoning about at each step.
+context from its prior — we are not selling generative fidelity. What
+we *are* selling is that the highlighted regions are attributable to
+the latent, and that we can describe in concrete terms *what* that
+latent is actually carrying at each step. The "`z_t` represents"
+caption is the semantic counterpart to the attention map: the map
+shows *where* the latent attends, the caption names *what* it attends
+to.
 
 ### How the imagined frames are produced
 
@@ -170,9 +175,18 @@ real by editing it.
 From the same starting state `z_0`, the model rolls out three
 candidate action sequences in latent space:
 
-- **A — goal plan.** right-click → New Folder → type "Reports" → Enter.
+- **A — goal-aligned.** right-click → New Folder → type "Reports" → Enter.
 - **B — distractor.** open the `Home` folder; file manager opens.
 - **C — wrong commit.** open the dialog and click Cancel.
+
+Each column carries its own imagined frame, attention map, and a
+**"Latent text"** panel describing what that rollout's latent
+actually represents at the current step (e.g., *"zA: endpoint contains
+Reports folder"*, *"zB: endpoint remains inside Home"*, *"zC: endpoint
+has no Reports folder"*). This makes the divergence between rollouts
+visible at the level of latent content, not just pixel layout — the
+rollouts are not just visually different, they encode semantically
+different states.
 
 The endpoint of each rollout is compared to the goal latent `z_goal`
 (encoded from the goal screenshot, shown as a reference card on the

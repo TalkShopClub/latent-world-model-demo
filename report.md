@@ -62,7 +62,7 @@ watching a human mentally simulate options before committing.
 
 ## 3. Video 1 — How the imagined frames and attention heatmaps are made
 
-**File:** `videos/latent_rollout_fig3_style.mp4`
+**File:** `videos/latent_rollout_fig3_style_with_latent_text.mp4`
 
 A single 8-step rollout from a starting state `z_0` (encoded from a
 real Desktop screenshot). Each step shows two panels side-by-side: the
@@ -165,7 +165,7 @@ real by editing it.
 
 ## 4. Video 2 — Why the world model is useful
 
-**File:** `videos/latent_rollout_goal_selection.mp4` *(headline)*
+**File:** `videos/latent_rollout_goal_selection_with_latent_text.mp4` *(headline)*
 
 From the same starting state `z_0`, the model rolls out three
 candidate action sequences in latent space:

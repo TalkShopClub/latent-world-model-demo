@@ -152,6 +152,44 @@
     margin: 10px 0;
   }
   .method strong { color: var(--accent); }
+  .advantages {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin: 18px 0 8px;
+  }
+  .advantage {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-left: 3px solid var(--accent);
+    border-radius: 8px;
+    padding: 18px 22px;
+  }
+  .advantage .big {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1.1;
+    margin: 4px 0 6px;
+    letter-spacing: -0.5px;
+  }
+  .advantage .label {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-bottom: 2px;
+  }
+  .advantage h4 {
+    margin: 8px 0 6px;
+    font-size: 1.05rem;
+    color: var(--text);
+  }
+  .advantage p { margin: 6px 0; font-size: 0.95rem; }
+  .est { color: var(--muted); font-size: 0.78rem; font-style: italic; }
+  @media (max-width: 900px) {
+    .advantages { grid-template-columns: 1fr; }
+  }
   hr { border: none; border-top: 1px solid var(--panel-border); margin: 48px 0 8px; }
   @media (max-width: 900px) {
     .demo-block .vid-row { grid-template-columns: 1fr; }
@@ -224,8 +262,72 @@
   watching a human mentally simulate options before committing.
 </p>
 
+<h2>3. Why a latent world model — speed and training cost</h2>
+<p>
+  Pixel-space video models (e.g., diffusion-based next-frame predictors)
+  are powerful but expensive in two places that matter directly for our
+  use case: <strong>inference</strong>, where an agent needs to roll out
+  multiple candidate plans before committing, and <strong>training</strong>,
+  where we want to scale to internet-scale GUI data without a movie-budget
+  compute spend. Operating in latent space changes both costs by an order
+  of magnitude or more.
+</p>
+
+<div class="advantages">
+  <div class="advantage">
+    <div class="label">Inference — per-rollout cost</div>
+    <div class="big">≈ 100× faster</div>
+    <h4>Latent rollouts vs pixel-space next-frame prediction</h4>
+    <p>
+      A single rollout step in our model is one forward pass through a
+      small predictor over ~256 latent tokens. A pixel-space video model
+      runs 20–50 denoising steps over millions of pixels to produce the
+      same imagined frame.
+    </p>
+    <p>
+      For multi-rollout planning (Video 2), the gap compounds: 3
+      rollouts × 6 steps = 18 latent steps versus 600+ pixel-space
+      denoising steps. This is what makes "imagine several plans, pick
+      the best one" viable as a runtime operation rather than an
+      offline batch job.
+    </p>
+    <p class="est">Estimate based on architecture comparison; to be confirmed empirically.</p>
+  </div>
+
+  <div class="advantage">
+    <div class="label">Training — internet-scale pretraining</div>
+    <div class="big">≈ $100K compute</div>
+    <h4>vs $5M–$30M for pixel-space alternatives</h4>
+    <p>
+      Pretraining a competitive latent world model on hundreds of
+      millions of GUI frames is projected to need <strong>~$100K of
+      GPU compute</strong>, against the <strong>$5M–$30M</strong>
+      typical for pixel-space video models of comparable scope (Sora,
+      Genie-class).
+    </p>
+    <p>
+      The savings come from three places:
+    </p>
+    <ul style="margin:6px 0 0; padding-left:20px;">
+      <li>JEPA never decodes pixels during pretraining — the objective lives entirely in latent space.</li>
+      <li>Latent dimensionality is ≈100× smaller than pixel dimensionality at the same effective resolution.</li>
+      <li>JEPA empirically converges in ~10× fewer gradient steps than reconstruction-based baselines on similar data (I-JEPA / V-JEPA).</li>
+    </ul>
+    <p class="est">Cost projection assumes ≈10K H100-hours at standard cloud rates.</p>
+  </div>
+</div>
+
+<p>
+  In short: <strong>cheap enough at inference to plan in real time,
+  cheap enough at training to scale</strong>. The decoder used to
+  produce the videos in this report is a separate, smaller artifact —
+  it is for visualization only, not on the runtime path. An agent
+  using our world model never decodes pixels in deployment; it reasons
+  in latent space and commits to actions directly.
+</p>
+
 <!-- ================================================================== -->
-<h2>3. Video 1 — How the imagined frames and attention heatmaps are made</h2>
+<h2>4. Video 1 — How the imagined frames and attention heatmaps are made</h2>
 
 <div class="demo-block">
   <div class="vid-row">
@@ -374,7 +476,7 @@
 </ul>
 
 <!-- ================================================================== -->
-<h2>4. Video 2 — Why the world model is useful</h2>
+<h2>5. Video 2 — Why the world model is useful</h2>
 
 <div class="demo-block headline">
   <div class="vid-row">
@@ -476,7 +578,7 @@
 </p>
 
 <!-- ================================================================== -->
-<h2>5. What we are claiming, and what we are not</h2>
+<h2>6. What we are claiming, and what we are not</h2>
 <div class="grid-claims">
   <div class="claim">
     <h4>What we claim</h4>
@@ -498,7 +600,7 @@
   </div>
 </div>
 
-<h2>6. Status and open decisions</h2>
+<h2>7. Status and open decisions</h2>
 <ul>
   <li><strong>Conceptual videos:</strong> two produced and embedded above. Storyboard quality, not yet model output.</li>
   <li><strong>Demo task:</strong> "Create a folder named Reports on the Desktop." Locked for v1.</li>

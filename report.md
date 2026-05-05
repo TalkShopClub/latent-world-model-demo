@@ -60,7 +60,58 @@ watching a human mentally simulate options before committing.
 
 ---
 
-## 3. Video 1 — How the imagined frames and attention heatmaps are made
+## 3. Why a latent world model — speed and training cost
+
+Pixel-space video models (e.g., diffusion-based next-frame predictors)
+are powerful but expensive in two places that matter directly for our
+use case: **inference**, where an agent needs to roll out multiple
+candidate plans before committing, and **training**, where we want to
+scale to internet-scale GUI data without a movie-budget compute spend.
+Operating in latent space changes both costs by an order of magnitude
+or more.
+
+### Inference: ≈100× faster per rollout step
+
+A single rollout step in our model is one forward pass through a small
+predictor over ~256 latent tokens. A pixel-space video model runs
+20–50 denoising steps over millions of pixels to produce the same
+imagined frame.
+
+For multi-rollout planning (Video 2), the gap compounds: 3 rollouts ×
+6 steps = 18 latent steps versus 600+ pixel-space denoising steps.
+This is what makes "imagine several plans, pick the best one" viable
+as a runtime operation rather than an offline batch job.
+
+> *Estimate based on architecture comparison; to be confirmed empirically.*
+
+### Training: ≈$100K to pretrain at internet scale
+
+Pretraining a competitive latent world model on hundreds of millions
+of GUI frames is projected to need **~$100K of GPU compute**, against
+the **$5M–$30M** typical for pixel-space video models of comparable
+scope (Sora, Genie-class).
+
+The savings come from three places:
+
+- JEPA never decodes pixels during pretraining — the objective lives
+  entirely in latent space.
+- Latent dimensionality is ≈100× smaller than pixel dimensionality at
+  the same effective resolution.
+- JEPA empirically converges in ~10× fewer gradient steps than
+  reconstruction-based baselines on similar data (I-JEPA / V-JEPA).
+
+> *Cost projection assumes ≈10K H100-hours at standard cloud rates.*
+
+In short: **cheap enough at inference to plan in real time, cheap
+enough at training to scale.** The decoder used to produce the videos
+in this report is a separate, smaller artifact — it is for
+visualization only, not on the runtime path. An agent using our world
+model never decodes pixels in deployment; it reasons in latent space
+and commits to actions directly.
+
+---
+
+## 4. Video 1 — How the imagined frames and attention heatmaps are made
 
 **File:** `videos/latent_rollout_fig3_style_with_latent_text.mp4`
 
@@ -168,7 +219,7 @@ real by editing it.
 
 ---
 
-## 4. Video 2 — Why the world model is useful
+## 5. Video 2 — Why the world model is useful
 
 **File:** `videos/latent_rollout_goal_selection_with_latent_text.mp4` *(headline)*
 
@@ -234,7 +285,7 @@ representation is enough to drive a useful planning loop.
 
 ---
 
-## 5. What we are claiming, and what we are not
+## 6. What we are claiming, and what we are not
 
 | **Claim** | **Not a claim** |
 | --- | --- |
@@ -245,7 +296,7 @@ representation is enough to drive a useful planning loop.
 
 ---
 
-## 6. Status and open decisions
+## 7. Status and open decisions
 
 - **Conceptual videos:** two produced and embedded above. Storyboard
   quality, not yet model output.

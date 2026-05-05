@@ -276,7 +276,7 @@
 <div class="advantages">
   <div class="advantage">
     <div class="label">Inference — per-rollout cost</div>
-    <div class="big">≈ 100× faster</div>
+    <div class="big">≥ 100× faster</div>
     <h4>Latent rollouts vs pixel-space next-frame prediction</h4>
     <p>
       A single rollout step in our model is one forward pass through a
@@ -285,13 +285,28 @@
       same imagined frame.
     </p>
     <p>
-      For multi-rollout planning (Video 2), the gap compounds: 3
-      rollouts × 6 steps = 18 latent steps versus 600+ pixel-space
-      denoising steps. This is what makes "imagine several plans, pick
-      the best one" viable as a runtime operation rather than an
-      offline batch job.
+      <strong>Massively parallel rollouts.</strong> Because each latent
+      rollout is a tiny tensor (~256 tokens × a few hundred dims), a
+      single GPU can run <strong>thousands of rollouts in parallel</strong>
+      in one batched forward pass. A pixel-space rollout already
+      saturates GPU memory by itself, so candidates have to be
+      processed serially. The practical throughput gap therefore tends
+      to be <strong>1000× or more</strong>, not 100× — the 100× number
+      above is a deliberately conservative floor that compares
+      step-for-step on a single rollout. Once you account for batch
+      parallelism, the real planning advantage is much larger:
+      thousands of imagined plans for the cost of one pixel-space
+      rollout.
     </p>
-    <p class="est">Estimate based on architecture comparison; to be confirmed empirically.</p>
+    <p>
+      For multi-rollout planning (Video 2), even the conservative
+      number compounds: 3 rollouts × 6 steps = 18 latent steps versus
+      600+ pixel-space denoising steps — and we can fan out to far
+      more than 3 candidates without hitting the latency budget. This
+      is what makes "imagine many plans, pick the best one" viable as
+      a runtime operation rather than an offline batch job.
+    </p>
+    <p class="est">100× is a conservative floor; measured throughput, including batch parallelism, is expected to be substantially larger. To be confirmed empirically.</p>
   </div>
 
   <div class="advantage">

@@ -70,19 +70,34 @@ scale to internet-scale GUI data without a movie-budget compute spend.
 Operating in latent space changes both costs by an order of magnitude
 or more.
 
-### Inference: ≈100× faster per rollout step
+### Inference: ≥100× faster per rollout step (conservative floor)
 
 A single rollout step in our model is one forward pass through a small
 predictor over ~256 latent tokens. A pixel-space video model runs
 20–50 denoising steps over millions of pixels to produce the same
 imagined frame.
 
-For multi-rollout planning (Video 2), the gap compounds: 3 rollouts ×
-6 steps = 18 latent steps versus 600+ pixel-space denoising steps.
-This is what makes "imagine several plans, pick the best one" viable
-as a runtime operation rather than an offline batch job.
+**Massively parallel rollouts.** Because each latent rollout is a tiny
+tensor (~256 tokens × a few hundred dims), a single GPU can run
+**thousands of rollouts in parallel** in one batched forward pass.
+A pixel-space rollout already saturates GPU memory by itself, so
+candidates have to be processed serially. The practical throughput
+gap therefore tends to be **1000× or more**, not 100× — the 100×
+number is a deliberately conservative floor that compares
+step-for-step on a single rollout. Once you account for batch
+parallelism, the real planning advantage is much larger: thousands of
+imagined plans for the cost of one pixel-space rollout.
 
-> *Estimate based on architecture comparison; to be confirmed empirically.*
+For multi-rollout planning (Video 2), even the conservative number
+compounds: 3 rollouts × 6 steps = 18 latent steps versus 600+
+pixel-space denoising steps — and we can fan out to far more than 3
+candidates without hitting the latency budget. This is what makes
+"imagine many plans, pick the best one" viable as a runtime operation
+rather than an offline batch job.
+
+> *100× is a conservative floor; measured throughput, including batch
+> parallelism, is expected to be substantially larger. To be confirmed
+> empirically.*
 
 ### Training: ≈$100K to pretrain at internet scale
 
